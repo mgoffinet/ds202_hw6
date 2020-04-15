@@ -1,0 +1,13 @@
+---
+title: 'Homework #6'
+author: "McKenna Goffinet, mgoffinet"
+date: "4/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+bis <- readxl::read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show')
+bisFull <- readxl::read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show full sheet')
+```
+
