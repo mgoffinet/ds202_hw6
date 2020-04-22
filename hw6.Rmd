@@ -1,7 +1,7 @@
 ---
 title: 'Homework #6'
 author: "McKenna Goffinet, mgoffinet"
-date: "4/14/2020"
+date: "4/21/2020"
 output: html_document
 ---
 
@@ -9,5 +9,61 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 bis <- readxl::read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show')
 bisFull <- readxl::read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show full sheet')
+library(dplyr)
+library(ggplot2)
 ```
 
+1: Clean the Data
+
+```{r}
+#get columns/data rows from Best In Show sheet and rename accordingly
+a <- bis[7:178, c("Best in show?","...7","...46")]
+names(a)[1] <- "Dog Breed"
+names(a)[2] <- "Popularity"
+names(a)[3] <- "Size"
+#get columns/data rows from Best In Show Full sheet and rename accordingly
+b <- bisFull[4:177, c("Best in show?","largest value","...5","80")]
+names(b)[1] <- "Dog Breed"
+names(b)[2] <- "Category"
+names(b)[3] <- "Data Score"
+names(b)[4] <- "Intelligence"
+#join two data frames
+dogs <- inner_join(a,b)
+#subset to breeds with complete data; only data score column has NAs
+dogs <- dogs %>% filter(!is.na(`Data Score`))
+#change data types
+dogs$Size <- as.factor(dogs$Size)
+dogs$Size <- factor(dogs$Size, levels=rev(levels(dogs$Size)))
+dogs$Category <- as.factor(dogs$Category)
+dogs$Popularity <- as.numeric(dogs$Popularity)
+dogs$`Data Score` <- as.numeric(dogs$`Data Score`)
+dogs$Intelligence <- as.numeric(dogs$Intelligence)
+```
+
+2: Create a graphic similar to the top dogs figure.
+
+```{r, fig.width=10,fig.height=13}
+dogs %>% filter(Intelligence < 44) %>% nrow() # gives half of rows
+
+dogs <- dogs %>% mutate(Intelligence_Category = (Intelligence<46)) #true if relatively clever
+
+colors <- c("herding"="orchid4","hound"="deepskyblue4","non-sporting"="seagreen", "sporting"="indianred4","terrier"="goldenrod","toy"="lightsteelblue4","working"="grey35")
+
+dogplot <- dogs %>% ggplot(aes(x=`Data Score`, y=Popularity, color=Category, shape=Intelligence_Category, size=Size, label=`Dog Breed`)) + geom_point() + geom_text( hjust=0, nudge_x=.05)
+
+dogplot <- dogplot + scale_y_reverse()
+
+dogplot <- dogplot + labs(title ="Best in Show: The Ultimate Dog Data")
+
+dogplot <- dogplot + scale_shape_discrete(name="Intelligence",breaks=c(FALSE,TRUE),labels = c("Dumb","Clever")) 
+
+dogplot <- dogplot + scale_color_manual(name="Category", values=colors, breaks=c("herding","hound","non-sporting","sporting","terrier","toy"  ,"working"), labels=c("Herding","Hound","Non-sporting","Sporting","Terrier","Toy","Working")) 
+
+dogplot <- dogplot + scale_size_discrete(name="Size",breaks=c("small","medium","large"),labels=c("Small","Medium","Large"))
+
+dogplot <- dogplot + theme(axis.text.x=element_blank(), axis.ticks.x = element_blank(), panel.grid.major=element_blank(),panel.grid.minor=element_blank(),axis.text.y=element_blank(), axis.ticks.y = element_blank())
+
+dogplot
+```
+
+*colors from http://sape.inf.usi.ch/quick-reference/ggplot2/colour 
